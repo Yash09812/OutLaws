@@ -12,6 +12,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #0c0a09; /* Stone-950 */
             color: #d6d3d1; /* Stone-300 */
+            overflow: hidden; /* Hide scrollbar during animation */
         }
         .gradient-bg {
             background-image: linear-gradient(to right, #00b09b, #96c93d);
@@ -117,14 +118,53 @@
         .close-btn:hover, .close-btn:focus {
             color: #fca5a5;
         }
+
+        /* New pre-loader and animation styles */
+        #pre-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0c0a09;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .pre-loader-logo {
+            animation: rotate 1.5s linear infinite;
+        }
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <!-- Header Section -->
+    <div id="pre-loader">
+        <svg class="pre-loader-logo h-24 w-24 text-green-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.68629 2 6 4.68629 6 8C6 11.3137 8.68629 14 12 14C15.3137 14 18 11.3137 18 8C18 4.68629 15.3137 2 12 2Z" fill="currentColor"/>
+            <path d="M12 14C8.68629 14 6 16.6863 6 20C6 23.3137 8.68629 26 12 26C15.3137 26 18 23.3137 18 20C18 16.6863 15.3137 14 12 14Z" fill="currentColor"/>
+            <path d="M12 26V30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 20C16 18.3431 14.6569 17 13 17C11.3431 17 10 18.3431 10 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <p class="text-white text-xl mt-4">Loading AgriGuard...</p>
+    </div>
+
     <header class="w-full text-white py-4 px-6 md:px-12 flex justify-between items-center bg-gray-900 shadow-lg">
         <div class="flex items-center space-x-2">
-            <!-- New custom SVG Logo -->
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-green-500">
                 <path d="M12 2C8.68629 2 6 4.68629 6 8C6 11.3137 8.68629 14 12 14C15.3137 14 18 11.3137 18 8C18 4.68629 15.3137 2 12 2Z" fill="currentColor"/>
                 <path d="M12 14C8.68629 14 6 16.6863 6 20C6 23.3137 8.68629 26 12 26C15.3137 26 18 23.3137 18 20C18 16.6863 15.3137 14 12 14Z" fill="currentColor"/>
@@ -146,9 +186,7 @@
         </button>
     </header>
 
-    <!-- Main Content Container -->
     <main class="flex-grow">
-        <!-- Home Page -->
         <section id="home-page" class="page text-center py-16 md:py-24 px-4 bg-gray-900 active">
             <h2 class="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4">Welcome to AgriGuard</h2>
             <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
@@ -160,18 +198,16 @@
             </a>
         </section>
 
-        <!-- About Page -->
         <section id="about-page" class="page py-16 md:py-24 px-4 bg-gray-900">
             <div class="max-w-4xl mx-auto">
                 <h2 class="text-center text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-8">About AgriGuard</h2>
                 <p class="text-lg text-gray-400 leading-relaxed mb-6">
                     AgriGuard was created to bridge the knowledge gap between farmers and critical agricultural data. Our mission is to provide an accessible and easy-to-use platform where anyone can quickly identify and learn about crop diseases. By leveraging modern web technologies and AI, we aim to empower farmers with the information they need to protect their crops and ensure a successful harvest.
                 </p>
-        
+            
             </div>
         </section>
 
-        <!-- Features Page -->
         <section id="features-page" class="page py-16 md:py-24 px-4 bg-gray-900">
             <div class="max-w-4xl mx-auto">
                 <h2 class="text-center text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-8">Key Features</h2>
@@ -208,7 +244,6 @@
             </div>
         </section>
 
-        <!-- Disease Explorer Page -->
         <section id="explorer-page" class="page py-8 px-4 md:px-12 bg-gray-900">
             <h2 class="text-center text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-8">Disease Explorer</h2>
             <div class="flex flex-wrap items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
@@ -220,22 +255,18 @@
                 <button class="w-full md:w-auto px-6 py-3 font-semibold text-white btn-primary rounded-xl hover:scale-105 transition-transform duration-200" onclick="resetFilters()">Reset</button>
             </div>
             <div id="explorerCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
-                <!-- Disease cards will be generated here by JavaScript -->
-            </div>
+                </div>
         </section>
 
-        <!-- All Diseases Page -->
         <section id="all-diseases-page" class="page py-8 px-4 md:px-12 bg-gray-900">
             <h2 class="text-center text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-8">All Diseases</h2>
             <div id="allDiseasesChartContainer" class="max-w-4xl mx-auto mb-8">
                 <canvas id="diseaseChart"></canvas>
             </div>
             <div id="allDiseasesCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                <!-- All disease cards will be generated here by JavaScript -->
-            </div>
+                </div>
         </section>
         
-        <!-- Contact Page -->
         <section id="contact-page" class="page py-16 md:py-24 px-4 bg-gray-900">
             <div class="max-w-2xl mx-auto text-center">
                 <h2 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-8">Contact Us</h2>
@@ -260,12 +291,10 @@
         </section>
     </main>
 
-    <!-- Footer Section -->
     <footer class="text-center text-gray-500 text-sm py-4 bg-gray-900 mt-auto">
         &copy; 2023 AgriGuard. All rights reserved.
     </footer>
 
-    <!-- Modal Markup -->
     <div id="diseaseModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -726,6 +755,12 @@
                     }
                 });
                 observer.observe(document.body, { attributes: true, subtree: true });
+
+                // Remove the pre-loader after a short delay
+                setTimeout(() => {
+                    document.getElementById('pre-loader').classList.add('fade-out');
+                    document.body.style.overflow = 'auto'; // Re-enable scrolling after animation
+                }, 1500); // Adjust duration here (1.5 seconds)
             });
         </script>
     </body>
