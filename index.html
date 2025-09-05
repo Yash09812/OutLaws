@@ -1,0 +1,482 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgriGuard - Disease Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0c0a09; /* Stone-950 */
+            color: #d6d3d1; /* Stone-300 */
+        }
+        .gradient-bg {
+            background-image: linear-gradient(to right, #00b09b, #96c93d);
+        }
+        .card-bg {
+            background-color: #1c1917; /* Stone-900 */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .card-bg:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .btn-primary {
+            background-color: #00b09b;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        .btn-primary:hover {
+            background-color: #009688;
+            transform: translateY(-1px);
+        }
+        .input-style {
+            background-color: #292524; /* Stone-800 */
+            border: 1px solid #44403c; /* Stone-700 */
+            color: #d6d3d1;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-style:focus {
+            border-color: #10b981; /* Green-500 */
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
+        }
+        .badge {
+            font-weight: 500;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* Card Fade-in Animation */
+        @keyframes cardFadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .card-animate {
+            animation: cardFadeInUp 0.6s ease-out forwards;
+        }
+        .card-animate:nth-child(1) { animation-delay: 0.1s; }
+        .card-animate:nth-child(2) { animation-delay: 0.2s; }
+        .card-animate:nth-child(3) { animation-delay: 0.3s; }
+        .card-animate:nth-child(4) { animation-delay: 0.4s; }
+        .card-animate:nth-child(5) { animation-delay: 0.5s; }
+        .card-animate:nth-child(6) { animation-delay: 0.6s; }
+        .card-animate:nth-child(7) { animation-delay: 0.7s; }
+        .card-animate:nth-child(8) { animation-delay: 0.8s; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .nav-link.active {
+            color: #10b981; /* Green-500 */
+            border-bottom: 2px solid #10b981;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #1c1917;
+            margin: 5% auto;
+            padding: 24px;
+            border: 1px solid #44403c;
+            width: 90%;
+            max-width: 700px;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            color: #d6d3d1;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .close-btn:hover, .close-btn:focus {
+            color: #fca5a5;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header Section -->
+    <header class="w-full text-white py-4 px-6 md:px-12 flex justify-between items-center bg-gray-900 shadow-lg">
+        <div class="flex items-center space-x-2">
+            <!-- New custom SVG Logo -->
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-green-500">
+                <path d="M12 2C8.68629 2 6 4.68629 6 8C6 11.3137 8.68629 14 12 14C15.3137 14 18 11.3137 18 8C18 4.68629 15.3137 2 12 2Z" fill="currentColor"/>
+                <path d="M12 14C8.68629 14 6 16.6863 6 20C6 23.3137 8.68629 26 12 26C15.3137 26 18 23.3137 18 20C18 16.6863 15.3137 14 12 14Z" fill="currentColor"/>
+                <path d="M12 26V30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M16 20C16 18.3431 14.6569 17 13 17C11.3431 17 10 18.3431 10 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <h1 class="text-2xl font-bold tracking-tight text-white">AgriGuard</h1>
+        </div>
+        <nav class="hidden md:flex space-x-6">
+            <a href="#home" class="nav-link hover:text-green-400 transition-colors duration-200">Home</a>
+            <a href="#explorer" class="nav-link hover:text-green-400 transition-colors duration-200">Disease Explorer</a>
+            <a href="#all-diseases" class="nav-link hover:text-green-400 transition-colors duration-200">All Diseases</a>
+            <a href="#demo" class="nav-link hover:text-green-400 transition-colors duration-200">Demo Mode</a>
+        </nav>
+        <button class="md:hidden text-white focus:outline-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        </button>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow">
+        <!-- Home Page -->
+        <section id="home-page" class="page text-center py-16 md:py-24 px-4 bg-gray-900 active">
+            <h2 class="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4">Welcome to AgriGuard</h2>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                Your centralized knowledge base for quick and reliable information on crop diseases.
+                Empowering farmers with the knowledge they need to protect their crops and livelihoods.
+            </p>
+            <a href="#explorer" class="inline-block px-8 py-4 text-lg font-semibold text-white btn-primary rounded-xl hover:scale-105 transition-transform duration-200">
+                Explore Diseases Now
+            </a>
+        </section>
+
+        <!-- Disease Explorer Page -->
+        <section id="explorer-page" class="page py-8 px-4 md:px-12 bg-gray-900">
+            <h2 class="text-center text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-8">Disease Explorer</h2>
+            <div class="flex flex-wrap items-center justify-center space-y-4 md:space-y-0 md:space-x-4">
+                <input type="text" id="searchInput" placeholder="Search disease by name..." class="w-full md:w-auto flex-grow input-style rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500" oninput="filterCards()">
+                <select id="cropSelect" class="w-full md:w-48 input-style rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500" onchange="filterCards()"></select>
+                <select id="symptomSelect" class="w-full md:w-48 input-style rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500" onchange="filterCards()"></select>
+                <select id="categorySelect" class="w-full md:w-48 input-style rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500" onchange="filterCards()"></select>
+                <select id="severitySelect" class="w-full md:w-48 input-style rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500" onchange="filterCards()"></select>
+                <button class="w-full md:w-auto px-6 py-3 font-semibold text-white btn-primary rounded-xl hover:scale-105 transition-transform duration-200" onclick="resetFilters()">Reset</button>
+            </div>
+            <div id="explorerCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-8">
+                <!-- Disease cards will be generated here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- All Diseases Page -->
+        <section id="all-diseases-page" class="page py-8 px-4 md:px-12 bg-gray-900">
+            <h2 class="text-center text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-8">All Diseases</h2>
+            <div id="allDiseasesChartContainer" class="max-w-4xl mx-auto mb-8">
+                <canvas id="diseaseChart"></canvas>
+            </div>
+            <div id="allDiseasesCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- All disease cards will be generated here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Demo Mode Page -->
+        <section id="demo-page" class="page text-center py-16 md:py-24 px-4 bg-gray-900">
+            <h2 class="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-4">Demo Mode</h2>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-8">
+                This page demonstrates a user flow for a specific disease lookup.
+                (Feature to be implemented: a guided tour or a pre-selected filter flow).
+            </p>
+        </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="text-center text-gray-500 text-sm py-4 bg-gray-900 mt-auto">
+        &copy; 2025 AgriGuard. All rights reserved.
+    </footer>
+
+    <!-- Modal Markup -->
+    <div id="diseaseModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h3 id="modalName" class="text-3xl font-bold mb-2 text-white"></h3>
+            <p id="modalDescription" class="text-gray-400 mb-4"></p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-gray-300">
+                <div>
+                    <strong class="text-gray-500">Crop:</strong> <span id="modalCrop"></span>
+                </div>
+                <div>
+                    <strong class="text-gray-500">Symptom:</strong> <span id="modalSymptom"></span>
+                </div>
+                <div>
+                    <strong class="text-gray-500">Category:</strong> <span id="modalCategory"></span>
+                </div>
+                <div>
+                    <strong class="text-gray-500">Severity:</strong> <span id="modalSeverity" class="badge"></span>
+                </div>
+            </div>
+            <div id="modalRemedies" class="mt-8">
+                <h4 class="text-xl font-semibold mb-2 text-white">Prevention & Treatment</h4>
+                <ul id="remediesList" class="list-disc list-inside space-y-2 text-gray-300">
+                    <!-- Remedies will be populated here -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Define the dummy data
+        const diseases = [
+            { id: 1, name: 'Wheat Leaf Blight', description: 'A common fungal disease in wheat.', crop: 'Wheat', symptom: 'Leaf Spotting', category: 'Bacterial', severity: 'High', remedies: ['Use disease-resistant wheat varieties.', 'Apply fungicides early in the season.', 'Ensure proper crop rotation.'] },
+            { id: 2, name: 'Rice Blast', description: 'A major disease affecting rice crops globally.', crop: 'Rice', symptom: 'Leaf Blight', category: 'Fungal', severity: 'Medium', remedies: ['Maintain proper nitrogen fertilizer levels.', 'Use resistant rice cultivars.', 'Avoid flooding fields excessively.'] },
+            { id: 3, name: 'Yellow Rust', description: 'Causes significant yield loss in wheat.', crop: 'Wheat', symptom: 'Leaf Blight', category: 'Fungal', severity: 'Low', remedies: ['Plant rust-resistant wheat varieties.', 'Timely application of fungicides.', 'Monitor fields regularly for early signs.'] },
+            { id: 4, name: 'Brown Spot', description: 'Widespread fungal disease of rice.', crop: 'Rice', symptom: 'Leaf Spotting', category: 'Fungal', severity: 'High', remedies: ['Improve soil fertility.', 'Use proper drainage to prevent standing water.', 'Apply fungicides as a last resort.'] },
+            { id: 5, name: 'Potato Blight', description: 'A destructive disease that affects potato crops.', crop: 'Potato', symptom: 'Leaf Lesions', category: 'Oomycete', severity: 'High', remedies: ['Plant certified disease-free seed potatoes.', 'Apply preventative fungicides.', 'Ensure good air circulation around plants.'] },
+            { id: 6, name: 'Corn Smut', description: 'Fungal disease that turns kernels into black galls.', crop: 'Corn', symptom: 'Galls', category: 'Fungal', severity: 'Medium', remedies: ['Avoid mechanical injuries to plants during cultivation.', 'Practice crop rotation.', 'Choose resistant corn hybrids.'] },
+            { id: 7, name: 'Soybean Rust', description: 'Can cause severe defoliation and yield loss.', crop: 'Soybean', symptom: 'Brown Lesions', category: 'Fungal', severity: 'High', remedies: ['Monitor for early rust infections.', 'Apply a rust-specific fungicide.', 'Plant early-maturing soybean varieties.'] },
+            { id: 8, name: 'Apple Scab', description: 'A worldwide fungal disease of apples.', crop: 'Apple', symptom: 'Leaf Spots', category: 'Fungal', severity: 'Low', remedies: ['Select scab-resistant apple varieties.', 'Prune trees to improve air flow.', 'Sanitize by removing infected leaves and fruit.'] },
+            { id: 9, name: 'Grape Powdery Mildew', description: 'A fungal disease on grapes that looks like a white powder.', crop: 'Grape', symptom: 'Powdery Coating', category: 'Fungal', severity: 'Medium', remedies: ['Apply sulfur or biological fungicides.', 'Ensure good canopy management.', 'Use resistant grapevine varieties.'] },
+            { id: 10, name: 'Tomato Leaf Mold', description: 'Causes yellow spots on tomato leaves.', crop: 'Tomato', symptom: 'Yellow Spots', category: 'Fungal', severity: 'Low', remedies: ['Provide adequate spacing for air circulation.', 'Remove and destroy infected leaves.', 'Water plants from below to keep leaves dry.'] },
+            { id: 11, name: 'Citrus Canker', description: 'A highly contagious bacterial disease of citrus.', crop: 'Citrus', symptom: 'Lesions', category: 'Bacterial', severity: 'High', remedies: ['Remove and destroy infected plants.', 'Use copper-based bactericides.', 'Sanitize all tools after use.'] },
+            { id: 12, name: 'Cucumber Downy Mildew', description: 'Affects cucumbers with a downy, whitish mold.', crop: 'Cucumber', symptom: 'Whitish Mold', category: 'Oomycete', severity: 'Medium', remedies: ['Plant resistant varieties.', 'Apply preventative fungicides.', 'Increase air circulation and reduce humidity.'] }
+        ];
+
+        // Function to create a disease card HTML element
+        function createDiseaseCard(disease, index) {
+            const severityColor = {
+                'High': 'bg-red-600',
+                'Medium': 'bg-yellow-600',
+                'Low': 'bg-green-600'
+            };
+
+            return `
+                <div class="card-bg rounded-2xl p-6 shadow-lg border border-gray-700 card-animate" style="animation-delay: ${index * 0.1}s;" onclick="openModal(${disease.id})">
+                    <h3 class="text-xl font-bold mb-2 text-white">${disease.name}</h3>
+                    <p class="text-sm text-gray-400 mb-4">${disease.description}</p>
+                    <div class="space-y-2 text-gray-300">
+                        <p class="flex items-center"><strong class="w-20 font-medium text-gray-500">Crop:</strong> <span class="ml-2">${disease.crop}</span></p>
+                        <p class="flex items-center"><strong class="w-20 font-medium text-gray-500">Symptom:</strong> <span class="ml-2">${disease.symptom}</span></p>
+                        <p class="flex items-center"><strong class="w-20 font-medium text-gray-500">Category:</strong> <span class="ml-2">${disease.category}</span></p>
+                        <p class="flex items-center"><strong class="w-20 font-medium text-gray-500">Severity:</strong> <span class="ml-2 ${severityColor[disease.severity]} text-white badge">${disease.severity}</span></p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Function to render disease cards
+        function renderCards(filteredDiseases, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = filteredDiseases.map((disease, index) => createDiseaseCard(disease, index)).join('');
+        }
+
+        // Function to populate a select menu with unique options
+        function populateSelect(selectId, dataArray, placeholder) {
+            const selectElement = document.getElementById(selectId);
+            selectElement.innerHTML = `<option value="">${placeholder}</option>`;
+            const uniqueOptions = [...new Set(dataArray)].sort();
+            uniqueOptions.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                selectElement.appendChild(optionElement);
+            });
+        }
+
+        // Function to filter the cards based on select and input values
+        function filterCards() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+            const cropFilter = document.getElementById('cropSelect').value;
+            const symptomFilter = document.getElementById('symptomSelect').value;
+            const categoryFilter = document.getElementById('categorySelect').value;
+            const severityFilter = document.getElementById('severitySelect').value;
+
+            const filtered = diseases.filter(disease => {
+                const matchesSearch = disease.name.toLowerCase().includes(searchQuery);
+                const matchesCrop = !cropFilter || disease.crop === cropFilter;
+                const matchesSymptom = !symptomFilter || disease.symptom === symptomFilter;
+                const matchesCategory = !categoryFilter || disease.category === categoryFilter;
+                const matchesSeverity = !severityFilter || disease.severity === severityFilter;
+                
+                return matchesSearch && matchesCrop && matchesSymptom && matchesCategory && matchesSeverity;
+            });
+            renderCards(filtered, 'explorerCardsContainer');
+        }
+
+        // Function to reset all filters
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('cropSelect').value = '';
+            document.getElementById('symptomSelect').value = '';
+            document.getElementById('categorySelect').value = '';
+            document.getElementById('severitySelect').value = '';
+            filterCards(); // Rerun the filter with reset values
+        }
+
+        // Navigation logic for the single-page app
+        function showPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
+            
+            const activePage = document.getElementById(pageId);
+            if (activePage) {
+                activePage.classList.add('active');
+            }
+
+            const activeLink = document.querySelector(`.nav-link[href="#${pageId.replace('-page', '')}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+        }
+
+        function handleHashChange() {
+            const hash = window.location.hash.substring(1);
+            const pageId = hash ? `${hash}-page` : 'home-page';
+            showPage(pageId);
+        }
+
+        // Modal Functions
+        function openModal(diseaseId) {
+            const disease = diseases.find(d => d.id === diseaseId);
+            if (!disease) return;
+
+            // Populate modal content
+            document.getElementById('modalName').textContent = disease.name;
+            document.getElementById('modalDescription').textContent = disease.description;
+            document.getElementById('modalCrop').textContent = disease.crop;
+            document.getElementById('modalSymptom').textContent = disease.symptom;
+            document.getElementById('modalCategory').textContent = disease.category;
+
+            const modalSeverity = document.getElementById('modalSeverity');
+            modalSeverity.textContent = disease.severity;
+            const severityColor = {
+                'High': 'bg-red-600',
+                'Medium': 'bg-yellow-600',
+                'Low': 'bg-green-600'
+            };
+            modalSeverity.className = `badge ${severityColor[disease.severity]}`;
+
+            const remediesList = document.getElementById('remediesList');
+            remediesList.innerHTML = disease.remedies.map(remedy => `<li>${remedy}</li>`).join('');
+
+            // Show the modal
+            document.getElementById('diseaseModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('diseaseModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('diseaseModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Chart.js functions
+        function renderChart() {
+            const categories = diseases.map(d => d.category);
+            const uniqueCategories = [...new Set(categories)];
+            const dataCounts = uniqueCategories.map(cat => categories.filter(c => c === cat).length);
+
+            const ctx = document.getElementById('diseaseChart').getContext('2d');
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: uniqueCategories,
+                    datasets: [{
+                        label: 'Number of Diseases',
+                        data: dataCounts,
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)', // green
+                            'rgba(245, 158, 11, 0.8)', // yellow
+                            'rgba(244, 63, 94, 0.8)', // red
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(244, 63, 94, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#d6d3d1'
+                            },
+                            grid: {
+                                color: '#44403c'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#d6d3d1'
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: true,
+                            text: 'Disease Distribution by Category',
+                            color: '#d6d3d1',
+                            font: {
+                                size: 18,
+                                family: 'Inter'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize the page on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const crops = diseases.map(d => d.crop);
+            const symptoms = diseases.map(d => d.symptom);
+            const categories = diseases.map(d => d.category);
+            const severities = diseases.map(d => d.severity);
+
+            populateSelect('cropSelect', crops, 'Crop type');
+            populateSelect('symptomSelect', symptoms, 'Symptom');
+            populateSelect('categorySelect', categories, 'Category');
+            populateSelect('severitySelect', severities, 'Severity');
+
+            renderCards(diseases, 'explorerCardsContainer');
+            renderCards(diseases, 'allDiseasesCardsContainer');
+
+            window.addEventListener('hashchange', handleHashChange);
+            handleHashChange(); // Call on initial load to set the correct page based on the URL hash
+
+            // Ensure the chart renders only when the canvas element exists
+            const allDiseasesPage = document.getElementById('all-diseases-page');
+            const observer = new MutationObserver((mutationsList, observer) => {
+                if (allDiseasesPage.classList.contains('active')) {
+                    renderChart();
+                    observer.disconnect();
+                }
+            });
+            observer.observe(document.body, { attributes: true, subtree: true });
+        });
+    </script>
+</body>
+</html>
